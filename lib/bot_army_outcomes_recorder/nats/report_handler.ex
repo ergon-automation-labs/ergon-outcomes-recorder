@@ -78,11 +78,19 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
 
   defp subscribe_to_subject(subject) do
     try do
-      {:ok, sub} = Gnat.sub(:nats_connection, self(), subject)
-      {:ok, sub}
+      Gnat.sub(:nats_connection, self(), subject)
     rescue
-      _e ->
-        {:error, "NATS not ready"}
+      e ->
+        Logger.debug("Exception subscribing to #{subject}: #{inspect(e)}")
+        {:error, "NATS exception"}
+    catch
+      :exit, reason ->
+        Logger.debug("Exit subscribing to #{subject}: #{inspect(reason)}")
+        {:error, "NATS exit"}
+
+      kind, reason ->
+        Logger.debug("Caught #{kind} subscribing to #{subject}: #{inspect(reason)}")
+        {:error, "NATS error"}
     end
   end
 
