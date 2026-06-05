@@ -28,13 +28,25 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
 
     Logger.info("Starting NATS subscriptions for outcomes_recorder", topics: topics)
 
-    subscriptions =
-      Enum.map(topics, fn topic ->
-        {:ok, sub} = Gnat.sub(:nats_connection, self(), topic)
-        {topic, sub}
-      end)
+    try do
+      subscriptions =
+        Enum.map(topics, fn topic ->
+          {:ok, sub} = Gnat.sub(:nats_connection, self(), topic)
+          {topic, sub}
+        end)
 
-    {:noreply, %{state | subscriptions: subscriptions}}
+      {:noreply, %{state | subscriptions: subscriptions}}
+    rescue
+      e ->
+        Logger.warning("Failed to subscribe to NATS topics, retrying in 5s", error: inspect(e))
+        Process.send_after(self(), :subscribe_retry, 5000)
+        {:noreply, state}
+    end
+  end
+
+  def handle_info(:subscribe_retry, state) do
+    send(self(), {:continue, :subscribe})
+    {:noreply, state}
   end
 
   @impl true

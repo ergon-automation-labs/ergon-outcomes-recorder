@@ -26,16 +26,31 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
   def handle_continue(:subscribe, state) do
     Logger.info("[ReportHandler] Subscribing to report request subjects")
 
-    # Subscribe to report request subjects (request/reply pattern)
-    subjects = ["outcomes.report.weekly"]
+    try do
+      # Subscribe to report request subjects (request/reply pattern)
+      subjects = ["outcomes.report.weekly"]
 
-    subscriptions =
-      Enum.map(subjects, fn subject ->
-        {:ok, sub} = Gnat.sub(:nats_connection, self(), subject)
-        {subject, sub}
-      end)
+      subscriptions =
+        Enum.map(subjects, fn subject ->
+          {:ok, sub} = Gnat.sub(:nats_connection, self(), subject)
+          {subject, sub}
+        end)
 
-    {:noreply, %{state | subscriptions: subscriptions}}
+      {:noreply, %{state | subscriptions: subscriptions}}
+    rescue
+      e ->
+        Logger.warning("[ReportHandler] Failed to subscribe to NATS, retrying in 5s",
+          error: inspect(e)
+        )
+
+        Process.send_after(self(), :subscribe_retry, 5000)
+        {:noreply, state}
+    end
+  end
+
+  def handle_info(:subscribe_retry, state) do
+    send(self(), {:continue, :subscribe})
+    {:noreply, state}
   end
 
   @impl true
