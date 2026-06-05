@@ -14,23 +14,9 @@ defmodule BotArmyOutcomesRecorder.Repo.Migrations.CreateOutcomesTables do
       timestamps(type: :utc_datetime_usec)
     end
 
-    create(
-      index(:outcomes_events, [:event_type, :recorded_at],
-        order: [event_type: :asc, recorded_at: :desc]
-      )
-    )
-
-    create(
-      index(:outcomes_events, [:bot_name, :recorded_at],
-        order: [bot_name: :asc, recorded_at: :desc]
-      )
-    )
-
-    create(
-      index(:outcomes_events, [:metric_name, :recorded_at],
-        order: [metric_name: :asc, recorded_at: :desc]
-      )
-    )
+    create(index(:outcomes_events, [:event_type, :recorded_at]))
+    create(index(:outcomes_events, [:bot_name, :recorded_at]))
+    create(index(:outcomes_events, [:metric_name, :recorded_at]))
 
     # outcomes_daily_rollups table
     create table(:outcomes_daily_rollups, primary_key: false) do
@@ -55,7 +41,7 @@ defmodule BotArmyOutcomesRecorder.Repo.Migrations.CreateOutcomesTables do
       )
     )
 
-    create(index(:outcomes_daily_rollups, [:date], order: [date: :desc]))
+    create(index(:outcomes_daily_rollups, [:date]))
 
     # outcomes_monthly_reports table
     create table(:outcomes_monthly_reports, primary_key: false) do
@@ -76,6 +62,6 @@ defmodule BotArmyOutcomesRecorder.Repo.Migrations.CreateOutcomesTables do
       )
     )
 
-    create(index(:outcomes_monthly_reports, [:month], order: [month: :desc]))
+    create(index(:outcomes_monthly_reports, [:month]))
   end
 end
