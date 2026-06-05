@@ -4,7 +4,6 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
 
   alias BotArmyOutcomesRecorder.Repo
   alias BotArmyOutcomesRecorder.Schemas.OutcomesEvent
-  alias BotArmyOutcomesRecorder.NATS.Responders.WeeklyReportResponder
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -64,7 +63,7 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
         end
 
       {:error, reason} ->
-        Logger.warn("Failed to decode outcomes event", reason: reason, topic: topic)
+        Logger.warning("Failed to decode outcomes event", reason: reason, topic: topic)
     end
   end
 

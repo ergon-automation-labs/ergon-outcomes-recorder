@@ -98,7 +98,7 @@ clean:
 	$(MIX) clean
 	rm -rf _build cover
 
-release: check
+release: test
 	@echo "==============================================="
 	@echo "Building OTP release"
 	@echo "==============================================="

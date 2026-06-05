@@ -45,7 +45,7 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
   end
 
   @impl true
-  def handle_info({:msg, %{body: body, topic: topic}}, state) do
+  def handle_info({:msg, %{topic: topic}}, state) do
     Logger.debug("Received message without reply_to (pub/sub only)", topic: topic)
     {:noreply, state}
   end
