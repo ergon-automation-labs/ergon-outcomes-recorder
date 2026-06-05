@@ -12,7 +12,7 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
   @impl true
   def init(_opts) do
     # Schedule first subscription attempt after 500ms to give NATS time to initialize
-    Process.send_after(self(), :subscribe, 500)
+    Process.send_after(self(), :subscribe, 2000)
     {:ok, %{subscriptions: [], retry_count: 0}}
   end
 

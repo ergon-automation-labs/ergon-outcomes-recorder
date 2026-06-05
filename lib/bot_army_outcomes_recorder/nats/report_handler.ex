@@ -19,7 +19,7 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
 
   @impl true
   def init(_opts) do
-    Process.send_after(self(), :subscribe, 500)
+    Process.send_after(self(), :subscribe, 2000)
     {:ok, %{subscriptions: [], retry_count: 0}}
   end
 
