@@ -20,21 +20,21 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
 
   @impl true
   def init(_opts) do
-    {:ok, gnat} = BotArmyRuntime.NATS.Connection.get()
-
     {:ok, _sub} =
-      Gnat.sub(gnat, self(), "outcomes.feedback.change", queue_group: "feedback_consumers")
+      Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
+        queue_group: "feedback_consumers"
+      )
 
     Logger.info("[FeedbackChangeConsumer] Subscribed to outcomes.feedback.change")
 
-    {:ok, %{gnat: gnat}}
+    {:ok, %{}}
   end
 
   @impl true
   def handle_info({:msg, msg}, state) do
     try do
       payload = Jason.decode!(msg.body)
-      route_feedback_change(payload, state.gnat)
+      route_feedback_change(payload)
     rescue
       e ->
         Logger.warning("[FeedbackChangeConsumer] Error decoding feedback change",
@@ -45,20 +45,20 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
     {:noreply, state}
   end
 
-  defp route_feedback_change(payload, gnat) do
+  defp route_feedback_change(payload) do
     component = payload["component"]
     action = payload["action"]
     rationale = payload["rationale"] || ""
 
     case component do
       "context_broker" ->
-        publish_context_broker_update(gnat, action, rationale, payload)
+        publish_context_broker_update(action, rationale, payload)
 
       "dispatcher" ->
-        publish_dispatcher_update(gnat, action, rationale, payload)
+        publish_dispatcher_update(action, rationale, payload)
 
       "llm_bot" ->
-        publish_llm_bot_update(gnat, action, rationale, payload)
+        publish_llm_bot_update(action, rationale, payload)
 
       _ ->
         Logger.warning("[FeedbackChangeConsumer] Unknown component",
@@ -67,7 +67,7 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
     end
   end
 
-  defp publish_context_broker_update(gnat, action, rationale, payload) do
+  defp publish_context_broker_update(action, rationale, payload) do
     update = %{
       "action" => action,
       "rationale" => rationale,
@@ -75,14 +75,14 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(gnat, "context.broker.dnd.update", Jason.encode!(update))
+    Gnat.pub(:nats_connection, "context.broker.dnd.update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published context broker update",
       action: action
     )
   end
 
-  defp publish_dispatcher_update(gnat, action, rationale, payload) do
+  defp publish_dispatcher_update(action, rationale, payload) do
     update = %{
       "action" => action,
       "rationale" => rationale,
@@ -90,14 +90,14 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(gnat, "dispatcher.routing.weight_update", Jason.encode!(update))
+    Gnat.pub(:nats_connection, "dispatcher.routing.weight_update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published dispatcher update",
       action: action
     )
   end
 
-  defp publish_llm_bot_update(gnat, action, rationale, payload) do
+  defp publish_llm_bot_update(action, rationale, payload) do
     update = %{
       "action" => action,
       "rationale" => rationale,
@@ -105,7 +105,7 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(gnat, "llm_bot.system_prompt.update", Jason.encode!(update))
+    Gnat.pub(:nats_connection, "llm_bot.system_prompt.update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published LLM bot update",
       action: action
