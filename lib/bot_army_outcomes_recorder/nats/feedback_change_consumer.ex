@@ -20,14 +20,43 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
 
   @impl true
   def init(_opts) do
-    {:ok, _sub} =
-      Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
-        queue_group: "feedback_consumers"
-      )
+    Process.send_after(self(), :subscribe, 1000)
+    {:ok, %{subscribed: false}}
+  end
 
-    Logger.info("[FeedbackChangeConsumer] Subscribed to outcomes.feedback.change")
+  @impl true
+  def handle_continue(:subscribe, state) do
+    try do
+      {:ok, _sub} =
+        Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
+          queue_group: "feedback_consumers"
+        )
 
-    {:ok, %{}}
+      Logger.info("[FeedbackChangeConsumer] Subscribed to outcomes.feedback.change")
+      {:noreply, %{state | subscribed: true}}
+    rescue
+      _e ->
+        Logger.warning("[FeedbackChangeConsumer] Failed to subscribe, retrying in 5s")
+        Process.send_after(self(), :subscribe, 5000)
+        {:noreply, state}
+    end
+  end
+
+  def handle_info(:subscribe, state) do
+    try do
+      {:ok, _sub} =
+        Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
+          queue_group: "feedback_consumers"
+        )
+
+      Logger.info("[FeedbackChangeConsumer] Subscribed to outcomes.feedback.change")
+      {:noreply, %{state | subscribed: true}}
+    rescue
+      _e ->
+        Logger.warning("[FeedbackChangeConsumer] Failed to subscribe, retrying in 5s")
+        Process.send_after(self(), :subscribe, 5000)
+        {:noreply, state}
+    end
   end
 
   @impl true
