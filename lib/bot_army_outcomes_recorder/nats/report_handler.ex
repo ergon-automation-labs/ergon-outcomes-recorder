@@ -26,31 +26,64 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
   def handle_continue(:subscribe, state) do
     Logger.info("[ReportHandler] Subscribing to report request subjects")
 
-    try do
-      # Subscribe to report request subjects (request/reply pattern)
-      subjects = ["outcomes.report.weekly"]
+    subjects = ["outcomes.report.weekly"]
 
-      subscriptions =
-        Enum.map(subjects, fn subject ->
-          {:ok, sub} = Gnat.sub(:nats_connection, self(), subject)
-          {subject, sub}
-        end)
+    subscriptions =
+      Enum.reduce(subjects, [], fn subject, acc ->
+        case subscribe_to_subject(subject) do
+          {:ok, sub} ->
+            Logger.debug("Subscribed to #{subject}")
+            [{subject, sub} | acc]
 
+          {:error, reason} ->
+            Logger.warning("Failed to subscribe to #{subject}: #{reason}")
+            acc
+        end
+      end)
+
+    if Enum.empty?(subscriptions) do
+      Logger.warning("[ReportHandler] Failed to subscribe, retrying in 2s")
+      Process.send_after(self(), :subscribe_retry, 2000)
+      {:noreply, state}
+    else
+      Logger.info("[ReportHandler] Successfully subscribed to #{length(subscriptions)} subjects")
       {:noreply, %{state | subscriptions: subscriptions}}
-    rescue
-      e ->
-        Logger.warning("[ReportHandler] Failed to subscribe to NATS, retrying in 5s",
-          error: inspect(e)
-        )
-
-        Process.send_after(self(), :subscribe_retry, 5000)
-        {:noreply, state}
     end
   end
 
   def handle_info(:subscribe_retry, state) do
-    send(self(), {:continue, :subscribe})
-    {:noreply, state}
+    current_subjects = state.subscriptions |> Enum.map(&elem(&1, 0)) |> MapSet.new()
+    all_subjects = ["outcomes.report.weekly"]
+    missing_subjects = Enum.reject(all_subjects, &MapSet.member?(current_subjects, &1))
+
+    new_subs =
+      Enum.reduce(missing_subjects, state.subscriptions, fn subject, acc ->
+        case subscribe_to_subject(subject) do
+          {:ok, sub} ->
+            Logger.info("[ReportHandler] Subscribed to #{subject} (retry)")
+            [{subject, sub} | acc]
+
+          {:error, _reason} ->
+            acc
+        end
+      end)
+
+    if Enum.count(new_subs) == Enum.count(state.subscriptions) do
+      {:noreply, %{state | subscriptions: new_subs}}
+    else
+      Process.send_after(self(), :subscribe_retry, 2000)
+      {:noreply, %{state | subscriptions: new_subs}}
+    end
+  end
+
+  defp subscribe_to_subject(subject) do
+    try do
+      {:ok, sub} = Gnat.sub(:nats_connection, self(), subject)
+      {:ok, sub}
+    rescue
+      _e ->
+        {:error, "NATS not ready"}
+    end
   end
 
   @impl true
