@@ -102,11 +102,11 @@ release: test
 	@echo "==============================================="
 	@echo "Building OTP release"
 	@echo "==============================================="
-	rm -rf _build/prod/rel/outcomes_recorder_bot
+	rm -rf _build/prod/rel/bot_army_outcomes_recorder
 	MIX_ENV=prod $(MIX) release
 	@echo ""
 	@echo "✓ Release built successfully"
-	@echo "Location: _build/prod/rel/outcomes_recorder_bot/"
+	@echo "Location: _build/prod/rel/bot_army_outcomes_recorder/"
 	@echo ""
 
 publish-release: release
@@ -120,10 +120,10 @@ publish-release: release
 		echo "Failed to resolve version from mix.exs"; \
 		exit 1; \
 	fi; \
-	TARBALL=outcomes_recorder_bot-$$VERSION.tar.gz; \
+	TARBALL=bot_army_outcomes_recorder-$$VERSION.tar.gz; \
 	echo "Version: $$VERSION"; \
 	echo "Creating release tarball..."; \
-	tar -czf "$$TARBALL" -C _build/prod/rel outcomes_recorder_bot/; \
+	tar -czf "$$TARBALL" -C _build/prod/rel bot_army_outcomes_recorder/; \
 	echo "✓ Tarball created: $$TARBALL"; \
 	echo ""; \
 	echo "Creating GitHub release v$$VERSION..."; \
@@ -146,6 +146,6 @@ push-and-publish:
 	@git push && $(MAKE) publish-release
 
 logs:
-	@$(SCRIPTS_DIRECTORY)/tail_bot_log.sh outcomes_recorder_bot
+	@$(SCRIPTS_DIRECTORY)/tail_bot_log.sh bot_army_outcomes_recorder
 
 .DEFAULT_GOAL := help
