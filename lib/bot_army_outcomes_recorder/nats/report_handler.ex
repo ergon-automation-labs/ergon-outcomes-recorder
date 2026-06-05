@@ -131,7 +131,7 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
               Jason.encode!(%{"ok" => false, "error" => "Unknown report type"})
           end
 
-        case Gnat.pub(:nats_connection, reply_to, response) do
+        case Gnat.pub(get_connection(), reply_to, response) do
           :ok ->
             Logger.debug("[ReportHandler] Published report response")
 
