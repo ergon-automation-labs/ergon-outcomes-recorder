@@ -1,0 +1,33 @@
+defmodule BotArmyOutcomesRecorder.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :bot_army_outcomes_recorder,
+      version: "0.1.0",
+      elixir: "~> 1.17",
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
+  end
+
+  # Run "mix help compile.app" to learn about applications.
+  def application do
+    [
+      extra_applications: [:logger],
+      mod: {BotArmyOutcomesRecorder.Application, []}
+    ]
+  end
+
+  # Run "mix help deps" to learn about dependencies.
+  defp deps do
+    [
+      {:gnat, "~> 1.4"},
+      {:ecto_sql, "~> 3.10"},
+      {:postgrex, "~> 0.18"},
+      {:jason, "~> 1.4"},
+      {:bot_army_library_runtime, path: "../bot_army_library_runtime"},
+      {:bot_army_library_core, path: "../bot_army_library_core"}
+    ]
+  end
+end
