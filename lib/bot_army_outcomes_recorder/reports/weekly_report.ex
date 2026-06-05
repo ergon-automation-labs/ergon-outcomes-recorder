@@ -215,7 +215,7 @@ defmodule BotArmyOutcomesRecorder.Reports.WeeklyReport do
       Repo.all(
         from(r in OutcomesDailyRollup,
           where: r.date >= ^start_date and r.date <= ^end_date,
-          order_by: [r.metric_name, :desc_nulls_last]
+          order_by: r.metric_name
         )
       )
 
