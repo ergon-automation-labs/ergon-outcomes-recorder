@@ -25,8 +25,8 @@ defmodule BotArmyOutcomesRecorder.Application do
   end
 
   defp maybe_add_feedback_consumer do
-    if @env != :test do
-      BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer
-    end
+    # Disabled: FeedbackChangeConsumer requires NATS to be fully initialized
+    # Will be re-enabled after NATS startup sequencing is fixed
+    nil
   end
 end
