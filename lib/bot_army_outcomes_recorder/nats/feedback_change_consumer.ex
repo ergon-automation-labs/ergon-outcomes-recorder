@@ -12,40 +12,20 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
   use GenServer
   require Logger
 
-  alias BotArmyOutcomesRecorder.Feedback.FeedbackLoopIntegrator
-
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
   @impl true
   def init(_opts) do
-    Process.send_after(self(), :subscribe, 1000)
+    Process.send_after(self(), :subscribe, 5000)
     {:ok, %{subscribed: false}}
-  end
-
-  @impl true
-  def handle_continue(:subscribe, state) do
-    try do
-      {:ok, _sub} =
-        Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
-          queue_group: "feedback_consumers"
-        )
-
-      Logger.info("[FeedbackChangeConsumer] Subscribed to outcomes.feedback.change")
-      {:noreply, %{state | subscribed: true}}
-    rescue
-      _e ->
-        Logger.warning("[FeedbackChangeConsumer] Failed to subscribe, retrying in 5s")
-        Process.send_after(self(), :subscribe, 5000)
-        {:noreply, state}
-    end
   end
 
   def handle_info(:subscribe, state) do
     try do
       {:ok, _sub} =
-        Gnat.sub(:nats_connection, self(), "outcomes.feedback.change",
+        Gnat.sub(get_connection(), self(), "outcomes.feedback.change",
           queue_group: "feedback_consumers"
         )
 
@@ -72,6 +52,17 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
     end
 
     {:noreply, state}
+  end
+
+  defp get_connection do
+    case GenServer.call(BotArmyRuntime.NATS.Connection, :get_connection, 5_000) do
+      {:ok, conn} -> conn
+      {:error, _} -> raise "NATS connection not available"
+    end
+  rescue
+    e ->
+      Logger.error("Failed to get NATS connection: #{inspect(e)}")
+      raise e
   end
 
   defp route_feedback_change(payload) do
@@ -104,7 +95,7 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(:nats_connection, "context.broker.dnd.update", Jason.encode!(update))
+    Gnat.pub(get_connection(), "context.broker.dnd.update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published context broker update",
       action: action
@@ -119,7 +110,7 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(:nats_connection, "dispatcher.routing.weight_update", Jason.encode!(update))
+    Gnat.pub(get_connection(), "dispatcher.routing.weight_update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published dispatcher update",
       action: action
@@ -134,7 +125,7 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
       "applied_at" => DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
-    Gnat.pub(:nats_connection, "llm_bot.system_prompt.update", Jason.encode!(update))
+    Gnat.pub(get_connection(), "llm_bot.system_prompt.update", Jason.encode!(update))
 
     Logger.info("[FeedbackChangeConsumer] Published LLM bot update",
       action: action

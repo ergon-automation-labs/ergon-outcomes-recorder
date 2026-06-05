@@ -89,9 +89,20 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
     end
   end
 
+  defp get_connection do
+    case GenServer.call(BotArmyRuntime.NATS.Connection, :get_connection, 5_000) do
+      {:ok, conn} -> conn
+      {:error, _} -> raise "NATS connection not available"
+    end
+  rescue
+    e ->
+      Logger.error("Failed to get NATS connection: #{inspect(e)}")
+      raise e
+  end
+
   defp subscribe_to_topic(topic) do
     try do
-      Gnat.sub(:nats_connection, self(), topic)
+      Gnat.sub(get_connection(), self(), topic)
     rescue
       e ->
         Logger.debug("Exception subscribing to #{topic}: #{inspect(e)}")
