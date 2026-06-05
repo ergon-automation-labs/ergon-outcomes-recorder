@@ -5,6 +5,8 @@ defmodule BotArmyOutcomesRecorder.Application do
 
   use Application
 
+  @env Mix.env()
+
   @impl true
   def start(_type, _args) do
     children =
@@ -23,7 +25,7 @@ defmodule BotArmyOutcomesRecorder.Application do
   end
 
   defp maybe_add_feedback_consumer do
-    if Mix.env() != :test do
+    if @env != :test do
       BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer
     end
   end
