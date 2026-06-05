@@ -11,11 +11,13 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
 
   @impl true
   def init(_opts) do
-    {:ok, %{subscriptions: []}, {:continue, :subscribe}}
+    # Schedule first subscription attempt after 500ms to give NATS time to initialize
+    Process.send_after(self(), :subscribe, 500)
+    {:ok, %{subscriptions: [], retry_count: 0}}
   end
 
-  @impl true
-  def handle_continue(:subscribe, state) do
+  def handle_info(:subscribe, state) do
+    # First subscription attempt (called directly, not via continue)
     topics = [
       "outcomes.task.>",
       "outcomes.decomposition.>",
@@ -36,7 +38,7 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
             [{topic, sub} | acc]
 
           {:error, reason} ->
-            Logger.warning("Failed to subscribe to #{topic}: #{reason}, will retry")
+            Logger.warning("Failed to subscribe to #{topic}: #{reason}")
             acc
         end
       end)
@@ -47,7 +49,7 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
       {:noreply, state}
     else
       Logger.info("Successfully subscribed to #{length(subscriptions)} topics")
-      {:noreply, %{state | subscriptions: subscriptions}}
+      {:noreply, %{state | subscriptions: subscriptions, retry_count: 0}}
     end
   end
 

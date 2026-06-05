@@ -19,11 +19,11 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
 
   @impl true
   def init(_opts) do
-    {:ok, %{subscriptions: []}, {:continue, :subscribe}}
+    Process.send_after(self(), :subscribe, 500)
+    {:ok, %{subscriptions: [], retry_count: 0}}
   end
 
-  @impl true
-  def handle_continue(:subscribe, state) do
+  def handle_info(:subscribe, state) do
     Logger.info("[ReportHandler] Subscribing to report request subjects")
 
     subjects = ["outcomes.report.weekly"]
@@ -47,7 +47,7 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
       {:noreply, state}
     else
       Logger.info("[ReportHandler] Successfully subscribed to #{length(subscriptions)} subjects")
-      {:noreply, %{state | subscriptions: subscriptions}}
+      {:noreply, %{state | subscriptions: subscriptions, retry_count: 0}}
     end
   end
 
