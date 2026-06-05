@@ -126,7 +126,6 @@ defmodule BotArmyOutcomesRecorder.Reports.WeeklyReport do
     status_emoji = status_emoji(data.status)
 
     current = format_value(name, data.current_value)
-    previous = format_value(name, data.previous_value)
 
     "| #{humanize_metric(name)} | #{current} | #{trend} | #{status_emoji} |"
   end
@@ -196,7 +195,7 @@ defmodule BotArmyOutcomesRecorder.Reports.WeeklyReport do
     end
   end
 
-  defp footer(report) do
+  defp footer(_report) do
     """
     ---
 
@@ -225,7 +224,7 @@ defmodule BotArmyOutcomesRecorder.Reports.WeeklyReport do
     |> Enum.group_by(& &1.metric_name)
     |> Enum.map(fn {metric_name, daily_rollups} ->
       # Average value for the week
-      values = Enum.filter_map(daily_rollups, & &1.value, & &1.value)
+      values = daily_rollups |> Enum.map(& &1.value) |> Enum.filter(& &1)
       current_value = if Enum.empty?(values), do: nil, else: Enum.sum(values) / length(values)
 
       # Get previous week's average for trend
@@ -241,7 +240,7 @@ defmodule BotArmyOutcomesRecorder.Reports.WeeklyReport do
           )
         )
 
-      prev_values = Enum.filter_map(prev_rollups, & &1.value, & &1.value)
+      prev_values = prev_rollups |> Enum.map(& &1.value) |> Enum.filter(& &1)
 
       previous_value =
         if Enum.empty?(prev_values), do: nil, else: Enum.sum(prev_values) / length(prev_values)
