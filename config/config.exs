@@ -11,4 +11,9 @@ config :bot_army_outcomes_recorder, BotArmyOutcomesRecorder.Repo,
 
 config :logger,
   level: :info,
-  backends: [:console]
+  backends: [:console],
+  default_formatter: {BotArmyRuntime.LoggerFormatter, []}
+
+config :logger, :console,
+  format: {BotArmyRuntime.LoggerFormatter, []},
+  metadata: [:correlation_id]
