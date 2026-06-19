@@ -8,7 +8,7 @@ database_url =
 config :bot_army_outcomes_recorder, BotArmyOutcomesRecorder.Repo,
   url: database_url,
   ssl: System.get_env("DATABASE_SSL") == "true",
-  pool_size: String.to_integer(System.get_env("DATABASE_POOL_SIZE", "5")),
+  pool_size: System.get_env("BOT_POOL_SIZE", "10") |> String.to_integer(),
   show_sensitive_data_on_error: System.get_env("SHOW_SENSITIVE_DATA", "false") == "true"
 
 # NATS configuration from environment
