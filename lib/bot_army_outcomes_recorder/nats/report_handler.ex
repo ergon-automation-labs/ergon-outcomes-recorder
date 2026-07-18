@@ -77,7 +77,7 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
   end
 
   defp get_connection do
-    case GenServer.call(BotArmyRuntime.NATS.Connection, :get_connection, 5_000) do
+    case GenServer.call(BotArmyLibraryRuntime.NATS.Connection, :get_connection, 5_000) do
       {:ok, conn} -> conn
       {:error, _} -> raise "NATS connection not available"
     end
