@@ -4,7 +4,7 @@ defmodule BotArmyOutcomesRecorder.MixProject do
   def project do
     [
       app: :bot_army_outcomes_recorder,
-      version: "0.1.22",
+      version: "0.1.26",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -26,7 +26,7 @@ defmodule BotArmyOutcomesRecorder.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:postgrex, "~> 0.18"},
       {:jason, "~> 1.4"},
-      {:bot_army_library_runtime, path: "../bot_army_library_runtime"},
+      {:bot_army_library_runtime, path: "../bot_army_library_runtime", override: true},
       {:bot_army_library_core, path: "../bot_army_library_core"}
     ]
   end
