@@ -4,7 +4,7 @@ defmodule BotArmyOutcomesRecorder.MixProject do
   def project do
     [
       app: :bot_army_outcomes_recorder,
-      version: "0.1.26",
+      version: "0.1.27",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps()
