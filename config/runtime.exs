@@ -13,7 +13,7 @@ config :bot_army_outcomes_recorder, BotArmyOutcomesRecorder.Repo,
 
 # NATS configuration from environment
 nats_servers =
-  System.get_env("NATS_SERVERS", "nats://localhost:4222")
+  System.get_env("NATS_SERVERS", "nats://localhost:4223")
   |> String.split(",")
   |> Enum.map(&String.trim/1)
 
