@@ -74,12 +74,6 @@ reset-db:
 init:
 	@if [ ! -d .git ]; then git init; echo "Git initialized."; else echo "Git already initialized."; fi
 
-compile:
-	@LOG_FILE="/tmp/compile-recorder-$$(date +%s).log"; \
-	echo "Compiling recorder and logging to $$LOG_FILE..."; \
-	$(MIX) compile 2>&1 | tee "$$LOG_FILE"; \
-	echo "✓ Compilation log: $$LOG_FILE"
-
 deps:
 	$(MIX) deps.get
 
