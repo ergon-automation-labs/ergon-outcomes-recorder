@@ -11,7 +11,6 @@ defmodule BotArmyOutcomesRecorder.NATS.Responders.FeedbackAnalysisResponder do
   require Logger
 
   alias BotArmyOutcomesRecorder.Feedback.FeedbackLoopIntegrator
-  alias BotArmyOutcomesRecorder.Feedback.FeedbackLogger
 
   def handle_request(_request) do
     try do

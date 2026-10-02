@@ -5,8 +5,6 @@ defmodule BotArmyOutcomesRecorder.Application do
 
   use Application
 
-  @env Mix.env()
-
   @impl true
   def start(_type, _args) do
     children =
