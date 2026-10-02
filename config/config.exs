@@ -15,4 +15,23 @@ config :logger,
 
 config :logger, :console,
   format: "[$time] [$level] $message\n",
-  metadata: [:correlation_id]
+  # Every key the bot actually passes to Logger. credo's
+  # MissedMetadataKeyInLoggerConfig check fails `make push` for undeclared keys, and
+  # the format above renders none of them, so declaring them costs nothing.
+  metadata: [
+    :correlation_id,
+    :action,
+    :change_id,
+    :component,
+    :date,
+    :error,
+    :event,
+    :event_type,
+    :metric,
+    :month,
+    :payload,
+    :reason,
+    :status,
+    :topic,
+    :year
+  ]

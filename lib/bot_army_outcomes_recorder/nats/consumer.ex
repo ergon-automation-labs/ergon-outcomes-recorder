@@ -89,6 +89,12 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
     end
   end
 
+  @impl true
+  def handle_info({:msg, %{body: body, topic: topic}}, state) do
+    Task.start(fn -> process_event(body, topic) end)
+    {:noreply, state}
+  end
+
   defp get_connection do
     case GenServer.call(BotArmyLibraryRuntime.NATS.Connection, :get_connection, 5_000) do
       {:ok, conn} -> conn
@@ -97,7 +103,9 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
   rescue
     e ->
       Logger.error("Failed to get NATS connection: #{inspect(e)}")
-      raise e
+      # reraise, not raise: re-raising the same exception here would discard the
+      # original stacktrace (credo W: "Use reraise inside a rescue block").
+      reraise e, __STACKTRACE__
   end
 
   defp subscribe_to_topic(topic) do
@@ -116,12 +124,6 @@ defmodule BotArmyOutcomesRecorder.NATS.Consumer do
         Logger.debug("Caught #{kind} subscribing to #{topic}: #{inspect(reason)}")
         {:error, "NATS error"}
     end
-  end
-
-  @impl true
-  def handle_info({:msg, %{body: body, topic: topic}}, state) do
-    Task.start(fn -> process_event(body, topic) end)
-    {:noreply, state}
   end
 
   defp process_event(body, topic) do

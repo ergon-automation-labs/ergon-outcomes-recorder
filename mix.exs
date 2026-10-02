@@ -27,7 +27,12 @@ defmodule BotArmyOutcomesRecorder.MixProject do
       {:postgrex, "~> 0.18"},
       {:jason, "~> 1.4"},
       {:bot_army_library_runtime, path: "../bot_army_library_runtime", override: true},
-      {:bot_army_library_core, path: "../bot_army_library_core"}
+      {:bot_army_library_core, path: "../bot_army_library_core"},
+      # The shared makefile's push pipeline runs `make credo` (mix credo --only warning).
+      # Without this dep that task cannot even load, so `make push` failed for every
+      # change and the repo could not be released through the standard path at all
+      # (found 2026-10-02: it had drifted to runtime 0.14.62 while the fleet moved on).
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

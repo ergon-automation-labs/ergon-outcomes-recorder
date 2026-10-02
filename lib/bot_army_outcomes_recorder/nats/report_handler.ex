@@ -76,6 +76,18 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
     end
   end
 
+  @impl true
+  def handle_info({:msg, %{body: body, reply_to: reply_to, topic: topic}}, state) do
+    Task.start(fn -> handle_request(body, reply_to, topic) end)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:msg, %{topic: topic}}, state) do
+    Logger.debug("Received message without reply_to (pub/sub only)", topic: topic)
+    {:noreply, state}
+  end
+
   defp get_connection do
     case GenServer.call(BotArmyLibraryRuntime.NATS.Connection, :get_connection, 5_000) do
       {:ok, conn} -> conn
@@ -84,7 +96,9 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
   rescue
     e ->
       Logger.error("Failed to get NATS connection: #{inspect(e)}")
-      raise e
+      # reraise, not raise: re-raising the same exception here would discard the
+      # original stacktrace (credo W: "Use reraise inside a rescue block").
+      reraise e, __STACKTRACE__
   end
 
   defp subscribe_to_subject(subject) do
@@ -103,18 +117,6 @@ defmodule BotArmyOutcomesRecorder.NATS.ReportHandler do
         Logger.debug("Caught #{kind} subscribing to #{subject}: #{inspect(reason)}")
         {:error, "NATS error"}
     end
-  end
-
-  @impl true
-  def handle_info({:msg, %{body: body, reply_to: reply_to, topic: topic}}, state) do
-    Task.start(fn -> handle_request(body, reply_to, topic) end)
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({:msg, %{topic: topic}}, state) do
-    Logger.debug("Received message without reply_to (pub/sub only)", topic: topic)
-    {:noreply, state}
   end
 
   defp handle_request(body, reply_to, topic) do

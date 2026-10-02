@@ -115,13 +115,13 @@ defmodule BotArmyOutcomesRecorder.Aggregator do
     end
   end
 
-  defp compute_average(values) when is_list(values) and length(values) > 0 do
+  defp compute_average(values) when is_list(values) and values != [] do
     (Enum.sum(values) / length(values)) |> Float.round(2)
   end
 
   defp compute_average(_), do: nil
 
-  defp compute_percentile(values, percentile) when is_list(values) and length(values) > 0 do
+  defp compute_percentile(values, percentile) when is_list(values) and values != [] do
     sorted = Enum.sort(values)
     idx = max(0, round(length(sorted) * percentile) - 1)
     (Enum.at(sorted, idx) || 0) |> Float.round(2)

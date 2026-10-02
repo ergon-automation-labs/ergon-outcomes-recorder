@@ -62,7 +62,9 @@ defmodule BotArmyOutcomesRecorder.NATS.FeedbackChangeConsumer do
   rescue
     e ->
       Logger.error("Failed to get NATS connection: #{inspect(e)}")
-      raise e
+      # reraise, not raise: re-raising the same exception here would discard the
+      # original stacktrace (credo W: "Use reraise inside a rescue block").
+      reraise e, __STACKTRACE__
   end
 
   defp route_feedback_change(payload) do
