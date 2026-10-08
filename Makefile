@@ -80,8 +80,11 @@ deps:
 compile:
 	@LOG_FILE="/tmp/compile-recorder-$$(date +%s).log"; \
 	echo "Compiling recorder and logging to $$LOG_FILE..."; \
+	set -o pipefail; \
 	$(MIX) compile 2>&1 | tee "$$LOG_FILE"; \
-	echo "✓ Compilation log: $$LOG_FILE"
+	rc=$$?; \
+	echo "✓ Compilation log: $$LOG_FILE"; \
+	exit $$rc
 
 test:
 	$(MIX) test
